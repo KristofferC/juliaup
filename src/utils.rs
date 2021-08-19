@@ -16,21 +16,21 @@ pub fn get_juliaup_home_path() -> Result<PathBuf> {
             path
         }
         Err(_) => {
-    let path = dirs::home_dir()
-        .ok_or(anyhow!(
-            "Could not determine the path of the user home directory."
-        ))?
-        .join(".julia")
-        .join("juliaup");
+            let path = dirs::home_dir()
+                .ok_or(anyhow!(
+                    "Could not determine the path of the user home directory."
+                ))?
+                .join(".julia")
+                .join("juliaup");
 
-            if !path.is_absolute() {
-                bail!(
-                    "The system returned an invalid home directory path `{}`.",
-                    path.display()
-                );
-            };
+                if !path.is_absolute() {
+                    bail!(
+                        "The system returned an invalid home directory path `{}`.",
+                        path.display()
+                    );
+                };
 
-            path
+                path
         }
     };
 
@@ -100,6 +100,6 @@ mod tests {
         let s = "1.1.1+0~x64";
         let (p,v) = parse_versionstring(&s.to_owned()).unwrap();
         assert_eq!(p, "x64");
-        assert_eq!(v, Version::new(1, 1, 1));
+        assert_eq!(v, Version {major: 1, minor: 1, patch: 1, pre: semver::Prerelease::EMPTY, build: semver::BuildMetadata::new("0").unwrap()});
     }
 }
