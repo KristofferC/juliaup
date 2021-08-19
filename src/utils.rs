@@ -1,5 +1,4 @@
-use anyhow::{anyhow, bail, Context, Result};
-use semver::Version;
+use anyhow::{anyhow, bail, Result};
 use std::path::PathBuf;
 
 pub fn get_juliaup_home_path() -> Result<PathBuf> {
@@ -53,53 +52,3 @@ pub fn get_arch() -> Result<String> {
     bail!("Running on an unknown arch: {}.", std::env::consts::ARCH)
 }
 
-pub fn parse_versionstring(value: &String) -> Result<(String, Version)> {
-    let parts: Vec<&str> = value.split('~').collect();
-
-    if parts.len() > 2 {
-        bail!(
-            "`{}` is an invalid version specifier: multiple `~` characters are not allowed.",
-            value
-        );
-    }
-
-    let version = parts[0];
-    let platform = if parts.len() == 2 { parts[1].to_string() } else { get_arch()? };
-
-    let version = Version::parse(version).with_context(|| {
-        format!(
-            "'{}' was determined to be the semver part of '{}', but failed to parse as a version.",
-            version, value
-        )
-    })?;
-
-    Ok((platform.to_string(), version))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_parse_versionstring() {
-        let s = "1.1.1";
-        let (p,v) = parse_versionstring(&s.to_owned()).unwrap();
-        assert_eq!(p, "x64");
-        assert_eq!(v, Version::new(1, 1, 1));
-
-        let s = "1.1.1~x86";
-        let (p,v) = parse_versionstring(&s.to_owned()).unwrap();
-        assert_eq!(p, "x86");
-        assert_eq!(v, Version::new(1, 1, 1));
-
-        let s = "1.1.1~x64";
-        let (p,v) = parse_versionstring(&s.to_owned()).unwrap();
-        assert_eq!(p, "x64");
-        assert_eq!(v, Version::new(1, 1, 1));
-
-        let s = "1.1.1+0~x64";
-        let (p,v) = parse_versionstring(&s.to_owned()).unwrap();
-        assert_eq!(p, "x64");
-        assert_eq!(v, Version {major: 1, minor: 1, patch: 1, pre: semver::Prerelease::EMPTY, build: semver::BuildMetadata::new("0").unwrap()});
-    }
-}

@@ -3,11 +3,11 @@ use crate::config_file::JuliaupConfigChannel;
 use crate::config_file::JuliaupConfigVersion;
 use crate::jsonstructs_versionsdb::JuliaupVersionDB;
 use crate::utils::get_juliaup_home_path;
-use crate::utils::parse_versionstring;
 use anyhow::{anyhow, Context, Result};
 use console::style;
 use flate2::read::GzDecoder;
 use indicatif::{ProgressBar, ProgressStyle};
+use semver::Version;
 use std::{
     io::Read,
     path::{Component::Normal, Path, PathBuf},
@@ -59,28 +59,28 @@ fn download_extract_sans_parent(url: &String, target_path: &Path) -> Result<()> 
 }
 
 pub fn install_version(
-    fullversion: &String,
+    version: &Version,
     config_data: &mut JuliaupConfig,
     version_db: &JuliaupVersionDB,
 ) -> Result<()> {
+
     // Return immediately if the version is already installed.
-    if config_data.installed_versions.contains_key(fullversion) {
+    if config_data.installed_versions.contains_key(&version) {
         return Ok(());
     }
 
     let download_url = version_db
         .available_versions
-        .get(fullversion)
+        .get(version)
         .ok_or(anyhow!(
             "Failed to find download url in versions db for '{}'.",
-            fullversion
+            version
         ))?
         .url
         .clone();
 
-    let (platform, version) = parse_versionstring(fullversion).with_context(|| format!(""))?;
 
-    let child_target_foldername = format!("julia-{}", fullversion);
+    let child_target_foldername = format!("julia-{}", version);
 
     let target_path = get_juliaup_home_path()
         .with_context(|| "Failed to retrieve juliap folder while trying to install new version.")?
@@ -88,7 +88,7 @@ pub fn install_version(
 
     std::fs::create_dir_all(target_path.parent().unwrap())?;
 
-    eprintln!("{} Julia {} ({}).", style("Installing").green().bold(), version, platform);
+    eprintln!("{} Julia {}.", style("Installing").green().bold(), version);
 
     download_extract_sans_parent(&download_url, &target_path)?;
 
@@ -97,9 +97,9 @@ pub fn install_version(
     rel_path.push(&child_target_foldername);
 
     config_data.installed_versions.insert(
-        fullversion.clone(),
+        version.clone(),
         JuliaupConfigVersion {
-            path: rel_path.to_string_lossy().into_owned(),
+            path: rel_path,
         },
     );
 
@@ -111,7 +111,7 @@ pub fn garbage_collect_versions(config_data: &mut JuliaupConfig) -> Result<()> {
         "Failed to retrieve juliap folder while trying to garbage collect versions."
     })?;
 
-    let mut versions_to_uninstall: Vec<String> = Vec::new();
+    let mut versions_to_uninstall: Vec<Version> = Vec::new();
     for (installed_version, detail) in &config_data.installed_versions {
         if config_data.installed_channels.iter().all(|j| match &j.1 {
             JuliaupConfigChannel::SystemChannel { version } => version != installed_version,

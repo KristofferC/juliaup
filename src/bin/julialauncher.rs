@@ -6,6 +6,7 @@ use juliaup::versions_file::load_versions_db;
 use normpath::PathExt;
 use std::path::Path;
 use std::path::PathBuf;
+use semver::Version;
 
 #[derive(thiserror::Error, Debug)]
 pub enum JuliaupInvalidChannel {
@@ -71,7 +72,7 @@ fn do_initial_setup(juliaupconfig_path: &Path) -> Result<()> {
 
 fn check_channel_uptodate(
     channel: &str,
-    current_version: &str,
+    current_version: &Version,
     versions_db: &JuliaupVersionDB,
 ) -> Result<()> {
     let latest_version = &versions_db

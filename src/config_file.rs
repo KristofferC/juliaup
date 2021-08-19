@@ -4,11 +4,14 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufReader, ErrorKind};
+use semver::Version;
+use std::path::PathBuf;
+
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct JuliaupConfigVersion {
     #[serde(rename = "Path")]
-    pub path: String,
+    pub path: PathBuf,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -16,7 +19,7 @@ pub struct JuliaupConfigVersion {
 pub enum JuliaupConfigChannel {
     SystemChannel {
         #[serde(rename = "Version")]
-        version: String,
+        version: Version,
     },
     LinkedChannel {
         #[serde(rename = "Command")]
@@ -31,7 +34,7 @@ pub struct JuliaupConfig {
     #[serde(rename = "Default")]
     pub default: Option<String>,
     #[serde(rename = "InstalledVersions")]
-    pub installed_versions: HashMap<String, JuliaupConfigVersion>,
+    pub installed_versions: HashMap<Version, JuliaupConfigVersion>,
     #[serde(rename = "InstalledChannels")]
     pub installed_channels: HashMap<String, JuliaupConfigChannel>,
 }

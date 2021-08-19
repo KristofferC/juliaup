@@ -108,7 +108,9 @@ dependencies = [
  "encode_unicode",
  "lazy_static",
  "libc",
+ "regex",
  "terminal_size",
+ "unicode-width",
  "winapi",
 ]
 
@@ -298,6 +300,7 @@ dependencies = [
  "anyhow",
  "atty",
  "clap",
+ "console",
  "dirs",
  "flate2",
  "fs_extra",
@@ -565,6 +568,9 @@ name = "semver"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "568a8e6258aa33c13358f81fd834adb854c6f7c9468520910a9b1e8fac068012"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "serde"
